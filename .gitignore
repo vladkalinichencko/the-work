@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env/
+.venv/
+venv/
+.envrc
+.DS_Store
+.ipynb_checkpoints/
+*.log
+*.pth
+*.ckpt
+*.egg-info/
+.cache/
+.idea/
+.vscode/
+outputs/
+implementation/notebooks/checkpoints_gpt2_compare/
+implementation/notebooks/wandb/
+implementation/datasets/Atomic Data/
+implementation/datasets/CausalNewsCorpus-master/
