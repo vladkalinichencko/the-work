@@ -7,10 +7,10 @@ from transformers import GPT2LMHeadModel, GPT2Config, GPT2Tokenizer, AdamW, get_
 from datasets import load_dataset
 import matplotlib.pyplot as plt
 
-# импорт CausalSelfAttention из notebook
+# Import CausalSelfAttention from notebook
 from implementation.notebooks.attention_integration import CausalSelfAttention
 
-# Определение GPT2 с causal-attention + LM head
+# Definition of GPT2 with causal-attention + LM head
 default_config = GPT2Config()
 class CausalGPT2LMHeadModel(GPT2LMHeadModel):
   def __init__(self, config):
@@ -18,7 +18,7 @@ class CausalGPT2LMHeadModel(GPT2LMHeadModel):
     for block in self.transformer.h:
       block.attn = CausalSelfAttention(config)
 
-# Функция обучения и оценки
+# Training and evaluation function
 def train_model(model, tokenizer, train_dataset, val_dataset, epochs=3, batch_size=8, lr=5e-5, freeze_alpha=False):
   device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
   model.to(device)
@@ -51,7 +51,7 @@ def train_model(model, tokenizer, train_dataset, val_dataset, epochs=3, batch_si
     avg = epoch_loss / len(train_loader)
     losses.append(avg)
     print(f'Epoch {epoch+1}/{epochs} | loss {avg:.4f} | time {time.time()-start:.1f}s')
-  # оценка perplexity
+  # evaluate perplexity
   model.eval()
   eval_loss = 0
   with torch.no_grad():
@@ -65,14 +65,14 @@ def train_model(model, tokenizer, train_dataset, val_dataset, epochs=3, batch_si
   print(f'Validation loss {eval_loss:.4f} | perplexity {ppl:.1f}')
   return losses, eval_loss, ppl
 
-# Основная функция
+# Main function
 if __name__ == '__main__':
-  # подготовка папки для результатов
+  # prepare folder for results
   eval_dir = os.path.join(os.path.dirname(__file__), '..', 'evaluation')
   os.makedirs(eval_dir, exist_ok=True)
 
   tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-  # загрузка датасета
+  # loading dataset
   raw = load_dataset('wikitext', 'wikitext-2-raw-v1')
   def tok(examples): return tokenizer(examples['text'])
   train_ds = raw['train'].map(tok, batched=True, remove_columns=['text'])
@@ -95,7 +95,7 @@ if __name__ == '__main__':
   print('Training causal GPT2...')
   causal_losses, causal_eval_loss, causal_ppl = train_model(causal_model, tokenizer, train_ds, val_ds, freeze_alpha=True)
 
-  # визуализация кривых обучения
+  # visualization of learning curves
   plt.figure()
   plt.plot(range(1, len(orig_losses)+1), orig_losses, label='Original')
   plt.plot(range(1, len(causal_losses)+1), causal_losses, label='Causal')
@@ -104,9 +104,9 @@ if __name__ == '__main__':
   plt.legend()
   plt.savefig(os.path.join(eval_dir, 'train_loss_comparison.png'))
 
-  # сохранение метрик
+  # save metrics
   with open(os.path.join(eval_dir, 'metrics.txt'), 'w') as f:
     f.write(f'Original | val_loss: {orig_eval_loss:.4f} | ppl: {orig_ppl:.1f}\n')
     f.write(f'Causal  | val_loss: {causal_eval_loss:.4f} | ppl: {causal_ppl:.1f}\n')
 
-  print('Comparison complete. Результаты в', eval_dir)
+  print('Comparison complete. Results in', eval_dir)
